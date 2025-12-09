@@ -17,7 +17,11 @@ export default function Home() {
   ];
 
   const handleNext = async () => {
-    const inputVal = document.getElementById("answerInput").value;
+    // 1. 요소를 가져오면서 "이건 분명히 입력창(HTMLInputElement)이야"라고 알려줍니다.
+    const inputElement = document.getElementById("answerInput") as HTMLInputElement;
+
+// 2. 만약 요소가 있으면 value를 가져오고, 없으면 빈 문자열("")을 넣으라는 안전장치(?.)를 둡니다.
+    const inputVal = inputElement?.value || "";
     if(!inputVal) return alert("내용을 입력해주세요!");
 
     const key = `q${step}`;
