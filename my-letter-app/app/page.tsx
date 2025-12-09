@@ -43,3 +43,4 @@ export default function Home() {
       // (기존 코드의 흐름에 맞게 유지)
     }
   };
+}
