@@ -4,22 +4,24 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export default function Home() {
   const [step, setStep] = useState(1);
-  const [answers, setAnswers] = useState({});
+  
+  // 타입 에러 방지: 문자열 키와 값을 가진 객체라고 명시
+  const [answers, setAnswers] = useState<{ [key: string]: string }>({});
+  
   const [loading, setLoading] = useState(false);
   const [letter, setLetter] = useState("");
 
-  // 질문 목록
+  // ★★★ [수정됨] 요청하신 새로운 질문 리스트 ★★★
   const questions = [
-    "1. 미래의 내가 현재의 나를 부르는 첫 문장은? (예: 안녕, 사랑하는 지민아)",
-    "2. 지금의 나에게 고마움을 표현한다면?",
-    "3. 내가 지나온 고생과 노력을 인정해준다면?",
-    "4. 미래에서 보니 별거 아니었던, 오늘 너무 걱정하지 말아야 할 것은?",
-    "5. 미래를 위해 지금부터 딱 하나만 실천한다면?",
-    "6. 마지막으로 해주고 싶은 따뜻한 말은?",
+    "미래의 내가 현재의 나를 부르는 첫 문장은? (예: 안녕, 사랑하는 지민아)",
+    "지금의 나에게 고마움을 표현한다면?",
+    "내가 지나온 고생과 노력을 인정해준다면?",
+    "미래에서 보니 별거 아니었던, 오늘 너무 걱정하지 말아야 할 것은?",
+    "미래를 위해 지금부터 딱 하나만 실천한다면?",
+    "마지막으로 해주고 싶은 따뜻한 말은?",
   ];
 
   const handleNext = async () => {
-    // 1. 요소를 가져올 때 "이건 인풋태그야"라고 알려줌
     const inputEl = document.getElementById("answerInput") as HTMLInputElement | null;
 
     if (!inputEl) return;
@@ -36,11 +38,9 @@ export default function Home() {
     if (step < 6) {
       setStep(step + 1);
     } else {
-      // 마지막 단계: 편지 생성 시작
+      // 마지막 단계: 편지 생성 요청
       setLoading(true);
       try {
-        // ★ .env 파일에서 키를 가져올 때는 NEXT_PUBLIC_ 접두사가 필요할 수 있습니다.
-        // 혹시 에러나면 .env 변수명을 NEXT_PUBLIC_GOOGLE_API_KEY로 바꾸세요.
         const apiKey = process.env.NEXT_PUBLIC_GOOGLE_API_KEY || process.env.GOOGLE_API_KEY;
         
         if (!apiKey) {
@@ -48,19 +48,24 @@ export default function Home() {
         }
 
         const genAI = new GoogleGenerativeAI(apiKey);
-        // 모델 이름은 가장 안정적인 것으로 설정
         const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
+        // ★★★ [수정됨] 질문이 바뀌었으니 AI에게 보내는 요청(프롬프트)도 그에 맞게 수정 ★★★
         const prompt = `
-          미래의 내가 현재의 나를 부르는 첫 문장: ${newAnswers['q1']}
-          지금의 나에게 고마움을 표현한다면: ${newAnswers['q2']}
-          내가 지나온 고생과 노력을 인정해준다면: ${newAnswers['q3']}
-          미래에서 보니 별거 아니었던, 오늘 너무 걱정하지 말아야 할 것은: ${newAnswers['q4']}
-          미래를 위해 지금부터 딱 하나만 실천한다면: ${newAnswers['q5']}
-          마지막으로 해주고 싶은 따뜻한 말은: ${newAnswers['q6']}
+          사용자가 입력한 내용을 바탕으로 미래의 내가 현재의 나에게 보내는 감동적인 편지를 작성해줘.
           
-          위 정보를 바탕으로 미래의 내가 현재의 나에게 보내는 따뜻하고 희망찬 편지를 써줘.
-          말투는 위 정보에 사용된 어투를 참고해서 써주고, 너무 길지 않게(500자 이내) 부탁해.
+          [입력 정보]
+          1. 첫 문장/호칭: ${newAnswers['q1']}
+          2. 고마움 표현: ${newAnswers['q2']}
+          3. 인정해줄 고생과 노력: ${newAnswers['q3']}
+          4. 걱정하지 말아야 할 것: ${newAnswers['q4']}
+          5. 실천할 한 가지: ${newAnswers['q5']}
+          6. 마지막 따뜻한 말: ${newAnswers['q6']}
+          
+          [요청 사항]
+          - 전체적으로 따뜻하고 다정한 말투로 써줘.
+          - 위 내용들을 자연스럽게 문장으로 연결해서 하나의 완성된 편지로 만들어줘.
+          - 길이는 500자 내외로 적당하게 작성해줘.
         `;
 
         const result = await model.generateContent(prompt);
@@ -75,7 +80,6 @@ export default function Home() {
     }
   };
 
-  // ▼▼▼ 여기가 사라져서 백지였던 겁니다! 복구했습니다. ▼▼▼
   return (
     <div style={{ padding: "2rem", maxWidth: "600px", margin: "0 auto", textAlign: "center", fontFamily: "sans-serif" }}>
       <h1 style={{ marginBottom: "2rem" }}>💌 미래에서 온 편지</h1>
@@ -83,7 +87,7 @@ export default function Home() {
       {loading ? (
         <div>
           <h2>편지를 작성 중입니다... ⏳</h2>
-          <p>잠시만 기다려주세요.</p>
+          <p>미래의 내가 펜을 들었습니다.</p>
         </div>
       ) : letter ? (
         <div style={{ whiteSpace: "pre-wrap", textAlign: "left", lineHeight: "1.6", backgroundColor: "#f9f9f9", padding: "20px", borderRadius: "10px" }}>
@@ -98,7 +102,7 @@ export default function Home() {
         </div>
       ) : (
         <div>
-          <p style={{ fontSize: "1.2rem", marginBottom: "1rem" }}>
+          <p style={{ fontSize: "1.1rem", marginBottom: "1rem", lineHeight: "1.5", wordBreak: "keep-all" }}>
             Q{step}. {questions[step - 1]}
           </p>
           
@@ -106,7 +110,7 @@ export default function Home() {
             type="text"
             id="answerInput"
             placeholder="답변을 입력하세요"
-            style={{ padding: "10px", width: "80%", marginBottom: "1rem", fontSize: "1rem" }}
+            style={{ padding: "12px", width: "90%", marginBottom: "1rem", fontSize: "1rem", borderRadius: "5px", border: "1px solid #ccc" }}
             onKeyDown={(e) => e.key === 'Enter' && handleNext()}
           />
           <br />
@@ -115,7 +119,7 @@ export default function Home() {
             onClick={handleNext}
             style={{ padding: "10px 20px", cursor: "pointer", backgroundColor: "#0070f3", color: "white", border: "none", borderRadius: "5px", fontSize: "1rem" }}
           >
-            {step < 6 ? "다음 질문" : "편지 받기"}
+            {step < 6 ? "다음" : "편지 받기"}
           </button>
         </div>
       )}
