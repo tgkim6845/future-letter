@@ -27,7 +27,10 @@ export default function Home() {
     const key = `q${step}`;
     const newAnswers = { ...answers, [key]: inputVal };
     setAnswers(newAnswers);
-    document.getElementById("answerInput").value = "";
+    const inputElement = document.getElementById("answerInput") as HTMLInputElement;
+if (inputElement) {
+  inputElement.value = "";
+}
 
     if (step < 6) {
       setStep(step + 1);
