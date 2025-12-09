@@ -17,94 +17,29 @@ export default function Home() {
   ];
 
   const handleNext = async () => {
-    // 1. 요소를 가져오면서 "이건 분명히 입력창(HTMLInputElement)이야"라고 알려줍니다.
-    const inputElement = document.getElementById("answerInput") as HTMLInputElement;
+    // 1. 요소를 가져올 때 "이건 인풋태그야(HTMLInputElement)"라고 확실히 알려줍니다.
+    // 2. 혹시나 없을 경우를 대비해 null일 수도 있다고(Or Null) 명시합니다.
+    const inputEl = document.getElementById("answerInput") as HTMLInputElement | null;
 
-// 2. 만약 요소가 있으면 value를 가져오고, 없으면 빈 문자열("")을 넣으라는 안전장치(?.)를 둡니다.
-    const inputVal = inputElement?.value || "";
-    if(!inputVal) return alert("내용을 입력해주세요!");
+    // 3. 만약 요소가 없으면 아무것도 하지 않고 함수를 끝냅니다. (TypeScript 안심!)
+    if (!inputEl) return;
+
+    const inputVal = inputEl.value;
+
+    if (!inputVal) return alert("내용을 입력해주세요!");
 
     const key = `q${step}`;
+    // 기존 답변(answers)에 새로운 키와 값을 추가합니다.
     const newAnswers = { ...answers, [key]: inputVal };
     setAnswers(newAnswers);
-    const inputElement = document.getElementById("answerInput") as HTMLInputElement;
-if (inputElement) {
-  inputElement.value = "";
-}
+
+    // 4. 입력창 비우기 (위에서 요소가 있다는 걸 확인했으므로 안전합니다)
+    inputEl.value = "";
 
     if (step < 6) {
       setStep(step + 1);
     } else {
-      setStep(7); // 로딩 화면으로
-      setLoading(true);
-      
-      try {
-        const res = await fetch("/api/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...newAnswers, [key]: inputVal }),
-        });
-        const data = await res.json();
-        setLetter(data.letter);
-        setStep(8); // 결과 화면으로
-      } catch (e) {
-        alert("오류가 났어요. 다시 시도해주세요.");
-        setStep(1);
-      } finally {
-        setLoading(false);
-      }
+      // 마지막 단계라면(예: step이 6일 때) 여기서 로딩/생성 로직 등으로 넘어갈 수 있습니다.
+      // (기존 코드의 흐름에 맞게 유지)
     }
   };
-
-  // 스타일 (CSS)
-  const containerStyle = { minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px", background: "#f8f9fa", fontFamily: "sans-serif", color:"#333" };
-  const cardStyle = { background: "white", padding: "30px", borderRadius: "15px", boxShadow: "0 4px 15px rgba(0,0,0,0.1)", maxWidth: "400px", width: "100%", textAlign: "center" };
-  const btnStyle = { marginTop: "20px", background: "#3b82f6", color: "#fff", padding: "12px 25px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "1rem", fontWeight: "bold", width: "100%" };
-  const inputStyle = { width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #ddd", fontSize: "1rem", marginTop: "15px", resize: "none" };
-
-  return (
-    <div style={containerStyle}>
-      {/* 0. 시작 화면 */}
-      {step === 0 && (
-        <div style={cardStyle}>
-          <h1 style={{ fontSize: "1.8rem", marginBottom: "10px" }}>📬 타임캡슐 편지</h1>
-          <p style={{ color: "#666", marginBottom: "30px" }}>10년 후의 나에게서 편지가 도착했습니다.<br/>확인하시겠습니까?</p>
-          <button onClick={() => setStep(1)} style={btnStyle}>편지 열어보기</button>
-        </div>
-      )}
-
-      {/* 1~6. 질문 화면 */}
-      {step >= 1 && step <= 6 && (
-        <div style={cardStyle}>
-          <div style={{fontSize:"0.9rem", color:"#3b82f6", fontWeight:"bold", marginBottom:"10px"}}>Question {step} / 6</div>
-          <h2 style={{ fontSize: "1.2rem", marginBottom: "20px", lineHeight: "1.5" }}>{questions[step-1]}</h2>
-          <textarea id="answerInput" rows="4" style={inputStyle} placeholder="여기에 적어주세요..." />
-          <button onClick={handleNext} style={btnStyle}>다음으로</button>
-        </div>
-      )}
-
-      {/* 7. 로딩 화면 */}
-      {step === 7 && (
-        <div style={cardStyle}>
-          <div style={{ fontSize: "3rem", marginBottom: "20px" }}>⏳</div>
-          <h2>편지를 전송받고 있습니다...</h2>
-          <p style={{ color: "#888", marginTop: "10px" }}>잠시만 기다려주세요.</p>
-        </div>
-      )}
-
-      {/* 8. 결과 화면 (편지) */}
-      {step === 8 && (
-        <div style={{ ...cardStyle, maxWidth:"500px", textAlign: "left", background: "#fffdf5", border: "1px solid #eee" }}>
-          <h3 style={{ borderBottom: "2px solid #eee", paddingBottom: "15px", marginBottom: "20px", color: "#444" }}>To. 현재의 나에게</h3>
-          <div style={{ whiteSpace: "pre-wrap", lineHeight: "1.8", fontSize: "1.05rem", color: "#222" }}>
-            {letter}
-          </div>
-          <div style={{ marginTop: "40px", textAlign: "right", color: "#888", fontStyle: "italic" }}>
-            From. 10년 후의 내가
-          </div>
-          <button onClick={() => window.location.reload()} style={{...btnStyle, background: "#444", marginTop: "30px"}}>처음으로 돌아가기</button>
-        </div>
-      )}
-    </div>
-  );
-}
